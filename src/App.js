@@ -23,7 +23,7 @@ const App = () => {
   return (
     <Router>
       <div className="flex h-screen">
-        <Sidebar /> {/* Sidebar always visible */}
+        <Sidebar />
         <div className="flex-1 flex flex-col">
           <main className="p-6 flex-1 overflow-auto">
             <Routes>

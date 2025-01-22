@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ProductFormModal = ({ product, onClose, onSave }) => {
+const ProductFormModal = ({ currentProduct, onClose, onSave }) => {
+    const product = currentProduct;
+    console.log(product.name)
   const [formData, setFormData] = useState({
     name: "",
     description: "",

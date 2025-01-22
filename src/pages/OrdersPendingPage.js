@@ -37,6 +37,7 @@ const OrdersPendingPage = () => {
   const [singleProductID, setSingleProductID] = useState(null);
   const [user, setUser] = useState()
   const [product, setProduct] = useState();
+  const [currProductStock, setCurrProductStock] = useState();
 
   const fetchOrders = async (page, status) => {
     setLoading(true);
@@ -233,6 +234,7 @@ const OrdersPendingPage = () => {
       console.log(name);
     const productID = product.filter(e => e.name.toLowerCase().includes(value.toLowerCase()))[0]._id
     console.log(productID)
+    // conaole.log()
       setSingleProductID(productID)
 
     setNewOrder((prevOrder) => ({
@@ -254,6 +256,8 @@ const OrdersPendingPage = () => {
 
       const data = await response.json();
       console.log("Fetched product data:", data);
+      setCurrProductStock(data.stock);
+    //   console.log(currProductStock);
 
       setSingleProduct(data);
       setError(null); // Clear previous errors
@@ -272,7 +276,7 @@ const OrdersPendingPage = () => {
 
 
 //   console.log(singleProductID)
-//   console.log(singleProduct)
+//   console.log(currProductStock)
 
 
   const totalPrice = singleProduct ? singleProduct.price * newOrder.quantity : 0;
@@ -285,39 +289,66 @@ const OrdersPendingPage = () => {
 
     // Ensure the totalAmount is updated before sending the data
     const orderToSubmit = { ...newOrder, totalAmount };
+    const newPrice = currProductStock - newOrder.quantity;
+    console.log(newPrice, newOrder);
 
     try {
-      const response = await fetch("http://localhost:3001/api/orders/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderToSubmit),
-      });
+        // 1. Submit the order first
+        const orderResponse = await fetch("http://localhost:3001/api/orders/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderToSubmit),
+        });
 
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.message || "Failed to add order");
-      }
+        if (!orderResponse.ok) {
+            const result = await orderResponse.json();
+            throw new Error(result.message || "Failed to add order");
+        }
 
-      const result = await response.json();
-      console.log("Order Added:", result);
+        const result = await orderResponse.json();
+        console.log("Order Added:", result);
 
-      setShowAddOrderModal(false); // Close the modal after success
-      setNewOrder({
-        userId: '',
-        productId: '',
-        quantity: 1,
-        status: 'Pending',
-        totalAmount: '',
-      }); // Reset form fields
-      setSingleProduct(null); // Reset product data after submitting the order
-      fetchOrders(currentPage, "Pending"); // Refresh orders list
+        // 2. Update the product stock count
+        const updatedProduct = {
+            ...singleProduct,
+            stock: newPrice // Update the stock count based on the new price
+        };
+
+        const productResponse = await fetch(`http://localhost:3001/api/products/${singleProduct._id}`, {
+            method: "PUT", // Make sure to use PUT method for updating
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedProduct),
+        });
+
+        if (!productResponse.ok) {
+            const result = await productResponse.json();
+            throw new Error(result.message || "Failed to update product stock");
+        }
+
+        const updatedProductData = await productResponse.json();
+        console.log("Product Stock Updated:", updatedProductData);
+
+        // 3. Finalize order flow
+        setShowAddOrderModal(false); // Close the modal after success
+        setNewOrder({
+            userId: '',
+            productId: '',
+            quantity: 1,
+            status: 'Pending',
+            totalAmount: '',
+        }); // Reset form fields
+        setSingleProduct(null); // Reset product data after submitting the order
+        fetchOrders(currentPage, "Pending"); // Refresh orders list
     } catch (error) {
-      console.error("Error adding order:", error.message);
-      alert(error.message); // Show the specific error message (e.g., duplicate orderId)
+        console.error("Error adding order:", error.message);
+        alert(error.message); // Show the specific error message (e.g., duplicate orderId)
     }
-  };
+};
+
 
 
 //   function getCurrentDateTime() {

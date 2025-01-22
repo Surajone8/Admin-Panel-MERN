@@ -54,7 +54,7 @@ const ProductList = () => {
     }
   };
 
-  
+
 
 
   const handleEditProduct = (product) => {
@@ -104,6 +104,8 @@ const ProductList = () => {
     setShowModal(false);
     setCurrentProduct(null);
   };
+
+  console.log(currentProduct)
 
   return (
     <div className="container mx-auto p-4">
