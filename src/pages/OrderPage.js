@@ -41,7 +41,7 @@ const OrderPage = () => {
   };
 
   useEffect(() => {
-    fetchOrders(currentPage);
+    fetchOrders(currentPage, "");
   }, [currentPage]);
 
   // Filter orders based on the applied filters

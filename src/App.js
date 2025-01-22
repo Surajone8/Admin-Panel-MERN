@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
@@ -16,6 +16,8 @@ import './App.css';
 import EditProductForm from './pages/EditProductForm';
 import OrdersShippedPage from './pages/OrdersShippedPage';
 import OrdersCancelledPage from './pages/OrdersCancelledPage';
+
+
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem('token');

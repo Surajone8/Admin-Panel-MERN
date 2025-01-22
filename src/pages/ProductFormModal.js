@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const ProductFormModal = ({ currentProduct, onClose, onSave }) => {
     const product = currentProduct;
-    console.log(product.name)
+    // console.log(product.name)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -60,6 +60,7 @@ const ProductFormModal = ({ currentProduct, onClose, onSave }) => {
 
       // If onSave callback is passed, call it to notify the parent component
       if (onSave) onSave();
+      onClose();
     } catch (err) {
       setError(err.message);
     }

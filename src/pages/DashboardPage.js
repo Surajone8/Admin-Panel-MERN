@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import { jwtDecode } from "jwt-decode";
+
 
 // Register necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -18,6 +20,7 @@ const DashboardPage = () => {
   const [topProducts, setTopProducts] = useState([]);
   const [revenueByDate, setRevenueByDate] = useState({});
   const [refProductData, setRefProductData] = useState();
+  const [refUserData, setRefUserData] = useState();
 
   const [selectedChart, setSelectedChart] = useState('orders'); // Track the selected chart
   const navigate = useNavigate();
@@ -45,6 +48,7 @@ const DashboardPage = () => {
         // Extract and process order dates and revenue
         const orderDates = orderFullData.orders.map(order => order.date.split('T')[0]);
         setRefProductData(productData)
+        setRefUserData(userData)
 
         // Count the number of orders for each date
         const dateCounts = orderDates.reduce((acc, date) => {
@@ -171,15 +175,58 @@ const DashboardPage = () => {
 
   const getTop10LowStockProducts = () => {
     if (!Array.isArray(refProductData)) {
-        return []; // Return an empty array if products is not an array
-      }
+      return []; // Return an empty array if products is not an array
+    }
+
+    // Filter products with stock 15 or less
+    const lowStockProducts = refProductData.filter(product => product.stock <= 15);
+
+    // If there are products with stock 15 or less, call the function
+    if (lowStockProducts.length > 0) {
+      handleLowStockProducts(lowStockProducts); // Call your custom function (you can change this to whatever function you want to call)
+    }
 
     return refProductData
       .sort((a, b) => a.stock - b.stock) // Sort products by stock in ascending order
       .slice(0, 10); // Get the first 10 products (lowest stock)
   };
-  let ProductsWithLeastStock = getTop10LowStockProducts();
-  console.log(ProductsWithLeastStock)
+
+  const token = localStorage.getItem('token');
+
+const handleLowStockProducts = (refProductData) => {
+    // Check if there are any products with stock of 15 or less
+    const lowStockProducts = refProductData.filter(product => product.stock <= 15);
+
+    // If there are low stock products, perform the action (e.g., show alert, log them)
+    if (lowStockProducts.length > 0) {
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+
+          const decodedToken = jwtDecode(token);
+
+          const userId = decodedToken.userId;
+          const user = refUserData.find(user => user._id === userId);
+          const userEmail = user.email;
+
+          // Log or use the user info as needed
+          console.log("User ID:", userId);
+          console.log("User Email:", userEmail);
+
+        } catch (error) {
+          console.error("Invalid token or token has expired", error);
+        }
+      } else {
+        console.log("No token found in localStorage");
+      }
+    }
+  };
+
+
+
+//   let ProductsWithLeastStock = getTop10LowStockProducts();
+//   console.log(ProductsWithLeastStock)
 
   return (
     <div className="flex flex-col p-6 space-y-6">
@@ -187,32 +234,38 @@ const DashboardPage = () => {
       <p className="text-lg text-gray-600">Welcome to the admin dashboard!</p>
 
       {/* Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Total Users Card */}
-        <div
-          className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between hover:shadow-lg transition duration-300 cursor-pointer"
-          onClick={() => navigate('/users')}
-        >
-          <h3 className="text-xl font-semibold text-gray-800">Total Users</h3>
-          <p className="text-3xl font-bold text-blue-600">{totalUsers !== null ? totalUsers : 'Loading...'}</p>
-        </div>
-        {/* Total Products Card */}
-        <div
-          className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between hover:shadow-lg transition duration-300 cursor-pointer"
-          onClick={() => navigate('/products')}
-        >
-          <h3 className="text-xl font-semibold text-gray-800">Total Products</h3>
-          <p className="text-3xl font-bold text-green-600">{totalProducts !== null ? totalProducts : 'Loading...'}</p>
-        </div>
-        {/* Total Orders Card */}
-        <div
-          className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-between hover:shadow-lg transition duration-300 cursor-pointer"
-          onClick={() => navigate('/orders')}
-        >
-          <h3 className="text-xl font-semibold text-gray-800">Total Orders</h3>
-          <p className="text-3xl font-bold text-yellow-600">{totalOrders !== null ? totalOrders : 'Loading...'}</p>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+  {/* Total Users Card */}
+  <div
+    className="bg-white shadow-xl rounded-lg p-8 flex flex-col items-center justify-between hover:shadow-2xl transition duration-300 cursor-pointer transform hover:scale-105"
+    onClick={() => navigate('/users')}
+  >
+    <h3 className="text-2xl font-semibold text-gray-800 mb-4">Total Users</h3>
+    <p className="text-4xl font-extrabold text-blue-600">{totalUsers !== null ? totalUsers : 'Loading...'}</p>
+    <div className="mt-6 w-full h-1 bg-blue-600 rounded-full"></div>
+  </div>
+
+  {/* Total Products Card */}
+  <div
+    className="bg-white shadow-xl rounded-lg p-8 flex flex-col items-center justify-between hover:shadow-2xl transition duration-300 cursor-pointer transform hover:scale-105"
+    onClick={() => navigate('/products')}
+  >
+    <h3 className="text-2xl font-semibold text-gray-800 mb-4">Total Products</h3>
+    <p className="text-4xl font-extrabold text-green-600">{totalProducts !== null ? totalProducts : 'Loading...'}</p>
+    <div className="mt-6 w-full h-1 bg-green-600 rounded-full"></div>
+  </div>
+
+  {/* Total Orders Card */}
+  <div
+    className="bg-white shadow-xl rounded-lg p-8 flex flex-col items-center justify-between hover:shadow-2xl transition duration-300 cursor-pointer transform hover:scale-105"
+    onClick={() => navigate('/orders')}
+  >
+    <h3 className="text-2xl font-semibold text-gray-800 mb-4">Total Orders</h3>
+    <p className="text-4xl font-extrabold text-yellow-600">{totalOrders !== null ? totalOrders : 'Loading...'}</p>
+    <div className="mt-6 w-full h-1 bg-yellow-600 rounded-full"></div>
+  </div>
+</div>
+
 
       {/* Buttons to toggle charts */}
       <div className="flex space-x-4 mb-6">
@@ -267,21 +320,26 @@ const DashboardPage = () => {
         )}
       </div>
 
-      <div class="p-6 bg-gradient-to-r from-blue-50 to-teal-50 shadow-xl rounded-xl">
-  <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Top 10 Products with Lowest Stock</h2>
-  <div class="overflow-x-auto bg-white shadow-lg rounded-lg">
-    <table class="min-w-full table-auto text-sm text-left text-gray-600">
-      <thead class="bg-teal-600 text-white uppercase tracking-wider">
+      <div className="p-6 bg-gradient-to-r from-blue-50 to-teal-50 shadow-xl rounded-xl">
+  <h2 className="text-3xl font-extrabold text-gray-800 mb-6">Top 10 Products with Lowest Stock</h2>
+  <div className="overflow-x-auto bg-white shadow-lg rounded-lg">
+    <table className="min-w-full table-auto text-sm text-left text-gray-600">
+      <thead className="bg-teal-600 text-white uppercase tracking-wider">
         <tr>
-          <th class="px-6 py-4 text-lg font-medium">Product Name</th>
-          <th class="px-6 py-4 text-lg font-medium">Stock</th>
+          <th className="px-6 py-4 text-lg font-medium">Product Name</th>
+          <th className="px-6 py-4 text-lg font-medium">Stock</th>
         </tr>
       </thead>
       <tbody>
-        {getTop10LowStockProducts().map((product) => (
-          <tr key={product._id} class="hover:bg-teal-50 transition duration-300">
-            <td class="px-6 py-4 border-b border-gray-200 font-semibold">{product.name}</td>
-            <td class="px-6 py-4 border-b border-gray-200 font-semibold">{product.stock}</td>
+      {getTop10LowStockProducts().map((product) => (
+          <tr
+            key={product._id}
+            className={`px-6 py-4 border-b border-gray-200 font-semibold transition duration-300 ${
+              product.stock <= 15 ? 'bg-red-200' : 'hover:bg-teal-50'
+            }`}
+          >
+            <td className="px-6 py-4 border-b border-gray-200">{product.name}</td>
+            <td className="px-6 py-4 border-b border-gray-200">{product.stock}</td>
           </tr>
         ))}
       </tbody>

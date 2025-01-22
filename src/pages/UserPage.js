@@ -26,44 +26,48 @@ const UserPage = () => {
   }, []);
 
   return (
-    <div className="user-page p-6">
-      <h2 className="text-2xl font-bold mb-4">User List</h2>
-      <p className="mb-6">Manage all users here.</p>
+    <div className="user-page p-8 bg-gray-50 rounded-lg shadow-lg">
+  <h2 className="text-3xl font-bold text-gray-800 mb-6">User List</h2>
+  <p className="text-lg text-gray-600 mb-8">Manage all users here. You can edit or delete user records easily.</p>
 
-      {loading ? (
-        <p>Loading users...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : (
-        <div>
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr>
-                <th className="border px-4 py-2 text-left">Name</th>
-                <th className="border px-4 py-2 text-left">Email</th>
-                <th className="border px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td className="border px-4 py-2">{user.name}</td>
-                  <td className="border px-4 py-2">{user.email}</td>
-                  <td className="border px-4 py-2">
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded mr-2">
-                      Edit
-                    </button>
-                    <button className="bg-red-500 text-white px-4 py-2 rounded">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+  {loading ? (
+    <p className="text-xl text-gray-500">Loading users...</p>
+  ) : error ? (
+    <p className="text-red-500 text-lg font-semibold">{error}</p>
+  ) : (
+    <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table className="min-w-full table-auto text-gray-700">
+        <thead className="bg-teal-600 text-white">
+          <tr>
+            <th className="border-b px-6 py-3 text-left font-medium text-sm uppercase tracking-wider">Name</th>
+            <th className="border-b px-6 py-3 text-left font-medium text-sm uppercase tracking-wider">Email</th>
+            <th className="border-b px-6 py-3 text-left font-medium text-sm uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="bg-gray-50">
+          {users.map((user) => (
+            <tr
+              key={user._id}
+              className="hover:bg-teal-50 transition duration-300 transform"
+            >
+              <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{user.name}</td>
+              <td className="border-b px-6 py-4 text-sm font-medium text-gray-600">{user.email}</td>
+              <td className="border-b px-6 py-4">
+                <button className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2 rounded-lg font-medium transition duration-300 transform hover:scale-105 mr-3">
+                  Edit
+                </button>
+                <button className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-medium transition duration-300 transform hover:scale-105">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  )}
+</div>
+
   );
 };
 

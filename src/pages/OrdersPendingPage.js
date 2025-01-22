@@ -2,6 +2,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import OrderRow from "../components/OrderRow";
 import FilterModal from "./FilterModal"; // Import FilterModal
+import emailjs from "emailjs-com";
+
+
 
 const OrdersPendingPage = () => {
   const [orders, setOrders] = useState([]);
@@ -44,7 +47,7 @@ const OrdersPendingPage = () => {
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:3001/api/orders/pagination?page=${page}&limit=${itemsPerPage}`
+        `http://localhost:3001/api/orders/pagination?page=${page}&limit=${itemsPerPage}&status=${status}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
@@ -277,6 +280,42 @@ const OrdersPendingPage = () => {
 
 //   console.log(singleProductID)
 //   console.log(currProductStock)
+const sendLowStockEmail = (product) => {
+    console.log("inside email");
+    setLoading(true);
+
+    emailjs
+      .send(
+        "service_sokretx", // Replace with your EmailJS service ID
+        "template_ew9z2yz", // Replace with your EmailJS template ID
+        {
+          from_name: "Inventory Management System", // Sender name
+          to_name: "Admin", // Recipient name
+          product_name: product.name, // Product name
+          product_id: product._id, // Product ID
+          product_price: product.price, // Product price
+          product_stock: product.stock, // Product stock level
+          to_email: "ysuraj18333@gmail.com", // Replace with the recipient's email
+        },
+        "xRLnnNajFxTGjT-En" // Replace with your EmailJS user ID
+      )
+      .then(
+        () => {
+          setLoading(false);
+          console.log("Low stock email sent successfully.");
+          alert('email sent successfully');
+        },
+        (error) => {
+          setLoading(false);
+          console.error("Failed to send low stock email:", error);
+        }
+      );
+  };
+
+
+
+
+
 
 
   const totalPrice = singleProduct ? singleProduct.price * newOrder.quantity : 0;
@@ -331,6 +370,15 @@ const OrdersPendingPage = () => {
 
         const updatedProductData = await productResponse.json();
         console.log("Product Stock Updated:", updatedProductData);
+
+
+        if (updatedProductData.product.stock <= 15) {
+            // Send low stock email
+            console.log("calling email...");
+            sendLowStockEmail(updatedProductData.product);
+          }
+
+          console.log("after email function");
 
         // 3. Finalize order flow
         setShowAddOrderModal(false); // Close the modal after success
@@ -410,13 +458,13 @@ const updateOrder = async (orderId, updatedData) => {
       <div className="flex justify-between mb-4">
         <button
           onClick={() => setShowAddOrderModal(true)} // Show the modal
-          className="px-4 py-2 bg-blue-500 text-white rounded"
+          className="mt-6 bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600 transition duration-300"
         >
           Add New Order
         </button>
         <button
           onClick={() => setShowModal(true)} // Show the filter modal
-          className="px-4 py-2 bg-gray-500 text-white rounded"
+          className="mt-6 bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600 transition duration-300"
         >
           Filter
         </button>
@@ -428,18 +476,18 @@ const updateOrder = async (orderId, updatedData) => {
       {renderActiveFilters()}
 
       {filteredOrders.length > 0 ? (
-        <table className="min-w-full table-auto mb-6">
-          <thead>
+        <table className="min-w-full table-auto mb-6 shadow-lg rounded-lg overflow-hidden bg-white opacity-0 animate-fade-in">
+          <thead className="bg-teal-600 text-white">
             <tr>
-              <th className="border px-4 py-2 text-left">Order ID</th>
-              <th className="border px-4 py-2 text-left">User Name</th>
-              <th className="border px-4 py-2 text-left">Product Name</th>
-              <th className="border px-4 py-2 text-left">Quantity</th>
-              <th className="border px-4 py-2 text-left">Total Amount</th>
-              <th className="border px-4 py-2 text-left">Date</th>
-              <th className="border px-4 py-2 text-left">Delivery Date</th>
-              <th className="border px-4 py-2 text-left">Status</th>
-              <th className="border px-4 py-2 text-left">Update</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Order ID</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">User Name</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Product Name</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Quantity</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Total Amount</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Date</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Delivery Date</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Status</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Update</th>
             </tr>
           </thead>
           <tbody>
@@ -452,29 +500,33 @@ const updateOrder = async (orderId, updatedData) => {
         <p>No orders found</p>
       )}
 
-      <div className="flex justify-center mt-6">
+<div className="flex justify-center mt-6 gap-3">
         <button
           onClick={() => paginate(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 mx-1 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg disabled:opacity-50 transition-all"
         >
           Previous
         </button>
+
         {[...Array(totalPages)].map((_, index) => (
           <button
             key={index}
             onClick={() => paginate(index + 1)}
-            className={`px-4 py-2 mx-1 ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+            className={`px-6 py-3 font-semibold rounded-lg transition-all ${
+              currentPage === index + 1
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "bg-gray-200 text-gray-700"
             }`}
           >
             {index + 1}
           </button>
         ))}
+
         <button
           onClick={() => paginate(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 mx-1 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg disabled:opacity-50 transition-all"
         >
           Next
         </button>

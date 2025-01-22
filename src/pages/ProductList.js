@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useMemo } from "react";
 import ProductRow from "../components/ProductRow";
 import ProductFormModal from "./ProductFormModal";
 
@@ -15,12 +14,9 @@ const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [showFilterOverlay, setShowFilterOverlay] = useState(false); // State to control overlay visibility
-//   const [users, setUsers] = useState([]);
-//   const [userID, setUserID] = useState([]);
+  const [showFilterOverlay, setShowFilterOverlay] = useState(false);
 
-//   const navigate = useNavigate();
-
+  // Fetch Products from API
   const fetchProducts = async (page) => {
     setLoading(true);
     try {
@@ -31,9 +27,9 @@ const ProductList = () => {
       const result = await response.json();
       setProducts(result.data || []);
       setTotalProducts(result.total || 0);
-      setLoading(false);
     } catch (err) {
       setError(err.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -42,6 +38,7 @@ const ProductList = () => {
     fetchProducts(currentPage);
   }, [currentPage]);
 
+  // Delete Product
   const handleDeleteProduct = async (id) => {
     try {
       const response = await fetch(`http://localhost:3001/api/products/${id}`, {
@@ -54,25 +51,19 @@ const ProductList = () => {
     }
   };
 
-
-
-
+  // Edit Product
   const handleEditProduct = (product) => {
     setCurrentProduct(product);
     setShowModal(true);
   };
 
-  const handleSaveProduct = () => {
-    fetchProducts(currentPage);
-    setShowModal(false);
-    setCurrentProduct(null);
-  };
-
+  // Add Product
   const handleAddProduct = () => {
     setCurrentProduct(null);
     setShowModal(true);
   };
 
+  // Apply Filters
   const applyFilters = (product) => {
     const priceValid =
       (!priceRange.min || product.price >= Number(priceRange.min)) &&
@@ -83,92 +74,101 @@ const ProductList = () => {
     return priceValid && stockValid;
   };
 
-  const filteredProducts = Array.isArray(products)
-    ? products
+  // Filtered Products with memoization
+  const filteredProducts = useMemo(
+    () =>
+      products
         .filter((product) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
-        .filter(applyFilters)
-    : [];
+        .filter(applyFilters),
+    [products, searchQuery, priceRange, stockRange]
+  );
 
+  // Total Pages for Pagination
   const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
+  // Pagination Function
   const paginate = (pageNumber) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
 
-  // Close modal function
+  // Close Modal
   const handleCloseModal = () => {
     setShowModal(false);
     setCurrentProduct(null);
   };
 
-  console.log(currentProduct)
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Product Management</h1>
 
-      {/* Search and Filters Button */}
-      <div className="mb-4 flex flex-col md:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md"
-        />
-        <button
-          onClick={() => setShowFilterOverlay(true)} // Show the filter overlay
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Filters
-        </button>
+      {/* Search and Filters */}
+      <div className="mb-6 flex flex-col md:flex-row gap-6 justify-between items-center">
+        <div className="flex w-full md:w-3/4 gap-4">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-5 py-3 text-lg font-medium bg-white border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out"
+          />
+          <button
+            onClick={() => setShowFilterOverlay(true)}
+            className="w-32 px-5 py-3 bg-teal-500 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition duration-300"
+          >
+            Filters
+          </button>
+        </div>
       </div>
 
-      {/* Product Table */}
+      {/* Loading and Error Handling */}
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      {filteredProducts.length > 0 ? (
-        <table className="min-w-full table-auto mb-6">
-          <thead>
-            <tr>
-              <th className="border px-4 py-2 text-left">Name</th>
-              <th className="border px-4 py-2 text-left">Price</th>
-              <th className="border px-4 py-2 text-left">Stock</th>
-              <th className="border px-4 py-2 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => (
-              <ProductRow
-                key={product._id}
-                product={product}
-                handleDeleteProduct={handleDeleteProduct}
-                handleEditProduct={handleEditProduct}
-              />
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>No products found.</p>
-      )}
 
+      {/* Product Table */}
+      {filteredProducts.length > 0 ? (
+  <table className="min-w-full table-auto mb-6 shadow-lg rounded-lg overflow-hidden bg-white opacity-0 animate-fade-in">
+    <thead className="bg-teal-600 text-white">
+      <tr>
+        <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Name</th>
+        <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Price</th>
+        <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Stock</th>
+        <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredProducts.map((product) => (
+        <ProductRow
+          key={product._id}
+          product={product}
+          handleDeleteProduct={handleDeleteProduct}
+          handleEditProduct={handleEditProduct}
+        />
+      ))}
+    </tbody>
+  </table>
+) : (
+  <p>No products found.</p>
+)}
+
+
+      {/* Add New Product Button */}
       <button
         onClick={handleAddProduct}
-        className="mt-6 bg-green-500 text-white px-6 py-2 rounded"
+        className="mt-6 bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600 transition duration-300"
       >
         Add New Product
       </button>
 
       {/* Pagination Controls */}
-      <div className="flex justify-center mt-6">
+      <div className="flex justify-center mt-6 gap-3">
         <button
           onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1 || totalPages === 0}
-          className="px-4 py-2 mx-1 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          disabled={currentPage === 1}
+          className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg disabled:opacity-50 transition-all"
         >
           Previous
         </button>
@@ -177,11 +177,11 @@ const ProductList = () => {
           <button
             key={index}
             onClick={() => paginate(index + 1)}
-            className={`px-4 py-2 mx-1 ${
+            className={`px-6 py-3 font-semibold rounded-lg transition-all ${
               currentPage === index + 1
-                ? "bg-blue-500 text-white"
-                : "bg-gray-300 text-gray-700"
-            } rounded`}
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
           >
             {index + 1}
           </button>
@@ -189,8 +189,8 @@ const ProductList = () => {
 
         <button
           onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages || totalPages === 0}
-          className="px-4 py-2 mx-1 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          disabled={currentPage === totalPages}
+          className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg disabled:opacity-50 transition-all"
         >
           Next
         </button>
@@ -253,13 +253,13 @@ const ProductList = () => {
             <div className="flex justify-between">
               <button
                 onClick={() => setShowFilterOverlay(false)}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded"
+                className="bg-gray-500 text-white px-4 py-2 rounded"
               >
                 Close
               </button>
               <button
                 onClick={() => setShowFilterOverlay(false)}
-                className="bg-blue-500 text-white px-6 py-2 rounded"
+                className="bg-blue-500 text-white px-4 py-2 rounded"
               >
                 Apply Filters
               </button>
@@ -268,14 +268,12 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ProductFormModal */}
+      {/* Product Form Modal */}
       {showModal && (
         <ProductFormModal
-          showModal={showModal}
-          onClose={handleCloseModal}
-          setShowModal={handleCloseModal}
           currentProduct={currentProduct}
-          onSave={handleSaveProduct}
+          onClose={handleCloseModal}
+          onSave={() => fetchProducts(currentPage)}
         />
       )}
     </div>

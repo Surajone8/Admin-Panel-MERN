@@ -132,15 +132,15 @@ useEffect(() => {
 
   return (
     <tr>
-      <td className="border px-4 py-2">{orderId}</td>
-      <td className="border px-4 py-2">{Currentuser.email}</td>
-      <td className="border px-4 py-2">{currentproduct.name}</td>
-      <td className="border px-4 py-2">{orderQuantity}</td>
-      <td className="border px-4 py-2">${orderTotalAmount.toFixed(2)}</td>
-      <td className="border px-4 py-2">{formattedDate}</td>
-      <td className="border px-4 py-2">{formattedDeliveryDate}</td>
-      <td className="border px-4 py-2">{status}</td>
-      <td className="border px-4 py-2">
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{orderId}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{Currentuser.email}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{currentproduct.name}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{orderQuantity}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">${orderTotalAmount.toFixed(2)}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{formattedDate}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{formattedDeliveryDate}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">{status}</td>
+      <td className="border-b px-6 py-4 text-sm font-medium text-gray-800">
         <button
           onClick={openModal}
           className="px-4 py-2 bg-green-500 text-white rounded"
