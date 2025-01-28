@@ -168,7 +168,7 @@ const OrdersProcessingPage = () => {
       {/* Filter Modal Trigger */}
       <button
         onClick={() => setShowModal(true)}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+        className="mb-4 bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600 transition duration-300"
       >
         Filter Orders
       </button>
@@ -180,18 +180,18 @@ const OrdersProcessingPage = () => {
       {renderActiveFilters()}
 
       {filteredOrders.length > 0 ? (
-        <table className="min-w-full table-auto mb-6">
-          <thead>
+        <table className="min-w-full table-auto mb-6 shadow-lg rounded-lg overflow-hidden bg-white opacity-0 animate-fade-in">
+          <thead className="bg-teal-600 text-white">
             <tr>
-              <th className="border px-4 py-2 text-left">Order ID</th>
-              <th className="border px-4 py-2 text-left">User ID</th>
-              <th className="border px-4 py-2 text-left">Product ID</th>
-              <th className="border px-4 py-2 text-left">Quantity</th>
-              <th className="border px-4 py-2 text-left">Total Amount</th>
-              <th className="border px-4 py-2 text-left">Date</th>
-              <th className="border px-4 py-2 text-left">Delivery Date</th>
-              <th className="border px-4 py-2 text-left">Status</th>
-              <th className="border px-4 py-2 text-left">Update</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Order ID</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">User ID</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Product ID</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Quantity</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Total Amount</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Date</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Delivery Date</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Status</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Update</th>
             </tr>
           </thead>
           <tbody>
@@ -209,29 +209,33 @@ const OrdersProcessingPage = () => {
       )}
 
       {/* Pagination Controls */}
-      <div className="flex justify-center mt-6">
+      <div className="flex justify-center mt-6 gap-3">
         <button
           onClick={() => paginate(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 mx-1 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg disabled:opacity-50 transition-all"
         >
           Previous
         </button>
+
         {[...Array(totalPages)].map((_, index) => (
           <button
             key={index}
             onClick={() => paginate(index + 1)}
-            className={`px-4 py-2 mx-1 ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+            className={`px-6 py-3 font-semibold rounded-lg transition-all ${
+              currentPage === index + 1
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "bg-gray-200 text-gray-700"
             }`}
           >
             {index + 1}
           </button>
         ))}
+
         <button
           onClick={() => paginate(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 mx-1 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg disabled:opacity-50 transition-all"
         >
           Next
         </button>

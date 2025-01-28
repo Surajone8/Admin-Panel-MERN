@@ -133,6 +133,7 @@ const ProductList = () => {
   <table className="min-w-full table-auto mb-6 shadow-lg rounded-lg overflow-hidden bg-white opacity-0 animate-fade-in">
     <thead className="bg-teal-600 text-white">
       <tr>
+        <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Product Image</th>
         <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Name</th>
         <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Price</th>
         <th className="px-6 py-4 text-left text-sm font-semibold tracking-wider uppercase">Stock</th>

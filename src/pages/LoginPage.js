@@ -6,6 +6,13 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState({
+    street: '',
+    city: '',
+    zip: '',
+    country: ''
+  });
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -41,7 +48,6 @@ const LoginPage = () => {
     }
   };
 
-
   const handleSignup = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -53,7 +59,13 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          phone,
+          address,
+        }),
       });
 
       const data = await response.json();
@@ -152,6 +164,66 @@ const LoginPage = () => {
                 className="w-full p-3 mt-2 border border-gray-300 rounded-md"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600">Phone</label>
+              <input
+                type="text"
+                placeholder="Enter your phone number"
+                className="w-full p-3 mt-2 border border-gray-300 rounded-md"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600">Street Address</label>
+              <input
+                type="text"
+                placeholder="Enter your street address"
+                className="w-full p-3 mt-2 border border-gray-300 rounded-md"
+                value={address.street}
+                onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600">City</label>
+              <input
+                type="text"
+                placeholder="Enter your city"
+                className="w-full p-3 mt-2 border border-gray-300 rounded-md"
+                value={address.city}
+                onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600">ZIP Code</label>
+              <input
+                type="text"
+                placeholder="Enter your ZIP code"
+                className="w-full p-3 mt-2 border border-gray-300 rounded-md"
+                value={address.zip}
+                onChange={(e) => setAddress({ ...address, zip: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600">Country</label>
+              <input
+                type="text"
+                placeholder="Enter your country"
+                className="w-full p-3 mt-2 border border-gray-300 rounded-md"
+                value={address.country}
+                onChange={(e) => setAddress({ ...address, country: e.target.value })}
                 required
               />
             </div>

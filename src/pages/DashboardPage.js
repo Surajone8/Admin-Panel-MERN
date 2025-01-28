@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import { Bar, Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import { jwtDecode } from "jwt-decode";
+import axios from 'axios'
 
 
 // Register necessary Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 const DashboardPage = () => {
   const [totalUsers, setTotalUsers] = useState(null);
@@ -21,6 +22,9 @@ const DashboardPage = () => {
   const [revenueByDate, setRevenueByDate] = useState({});
   const [refProductData, setRefProductData] = useState();
   const [refUserData, setRefUserData] = useState();
+  const [statusData, setStatusData] = useState({});
+  const [countryCount, setCountryCount] = useState([]);
+  const [countryFlagData, setCountryFlagData] = useState({});
 
   const [selectedChart, setSelectedChart] = useState('orders'); // Track the selected chart
   const navigate = useNavigate();
@@ -47,12 +51,25 @@ const DashboardPage = () => {
 
         // Extract and process order dates and revenue
         const orderDates = orderFullData.orders.map(order => order.date.split('T')[0]);
-        setRefProductData(productData)
-        setRefUserData(userData)
+        const orderStatus = orderFullData.orders.map(order => order.status);
+        const userCountryCount = userData.map(user => user.address["country"]);
+        setRefProductData(productData);
+        setRefUserData(userData);
 
         // Count the number of orders for each date
         const dateCounts = orderDates.reduce((acc, date) => {
           acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        }, {});
+
+        const countryCountex = userCountryCount.reduce((acc, country) => {
+          acc[country] = (acc[country] || 0) + 1;
+          return acc;
+        }, {});
+        setCountryCount(countryCountex);
+
+        const statusCount = orderStatus.reduce((acc, Status) => {
+          acc[Status] = (acc[Status] || 0) + 1;
           return acc;
         }, {});
 
@@ -110,6 +127,7 @@ const DashboardPage = () => {
         setTotalProducts(productData.length);
         setTotalOrders(orderData.totalOrders);
         setOrderDates(orderDates);
+        setStatusData(statusCount);
         setDateCounts(dateCounts);
         setRevenueByDate(revenueByDate);
         setTopProducts(topSellingProducts);
@@ -118,12 +136,55 @@ const DashboardPage = () => {
       }
     };
 
+    // Fetch dashboard data when the component is mounted
     fetchDashboardData();
-  }, []);
+
+    // Fetch country flags when the country count is updated
+    if (countryCount && Object.keys(countryCount).length > 0) {
+      async function fetchCountryFlags() {
+        const countryFlags = {};
+        for (const country of Object.keys(countryCount)) {
+          try {
+            const response = await fetch(
+              `https://restcountries.com/v3.1/name/${encodeURIComponent(country)}`
+            );
+
+            if (!response.ok) {
+              throw new Error(`Failed to fetch flag for ${country}`);
+            }
+
+            const countryData = await response.json();
+            countryFlags[country] = {
+              flag: countryData[0].flags.svg, // SVG URL for the flag
+              count: countryCount[country], // User count
+            };
+          } catch (error) {
+            console.error(`Failed to fetch flag for ${country}:`, error.message);
+          }
+        }
+
+        console.log("Country Flags with Counts:", countryFlags);
+        setCountryFlagData(countryFlags);
+      }
+
+      fetchCountryFlags();
+    }
+  }, [countryCount]); // Dependency array ensures this effect runs when countryCount changes
 
   if (error) {
     return <p className="text-red-500">{error}</p>;
   }
+
+  console.log(countryCount);
+
+
+
+
+
+
+
+
+
 
   const ordersGraphData = {
     labels: Object.keys(dateCounts),
@@ -163,6 +224,58 @@ const DashboardPage = () => {
       },
     ],
   };
+
+  const labels = Object.keys(statusData); // ["Pending", "Completed", "Cancelled", "Shipped"]
+  const data = Object.values(statusData); // [45, 120, 30, 60]
+
+  console.log(labels, data);
+
+  const pieChartData = {
+    labels: labels,
+    datasets: [
+      {
+        label: "Order Status Distribution",
+        data: data,
+        backgroundColor: [
+            "#FF6384", // Pending
+            "#36A2EB", // Completed
+            "#FFCE56", // Cancelled
+            "#4BC0C0", // Shipped
+            "#9966FF"  // Processing
+          ],
+          hoverBackgroundColor: [
+            "#FF6384", // Pending
+            "#36A2EB", // Completed
+            "#FFCE56", // Cancelled
+            "#4BC0C0", // Shipped
+            "#9966FF"  // Processing
+          ],
+          borderWidth: 1,
+      },
+    ],
+  };
+
+  const pieOptions = {
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom",
+      },
+      tooltip: {
+        callbacks: {
+          label: (tooltipItem) => {
+            const label = tooltipItem.label || "";
+            const value = tooltipItem.raw || 0;
+            const total = tooltipItem.dataset.data.reduce((sum, val) => sum + val, 0);
+            const percentage = ((value / total) * 100).toFixed(2);
+            return `${label}: ${value} (${percentage}%)`;
+          },
+        },
+      },
+    },
+  };
+
+
 
   const graphOptions = {
     responsive: true,
@@ -208,11 +321,11 @@ const handleLowStockProducts = (refProductData) => {
 
           const userId = decodedToken.userId;
           const user = refUserData.find(user => user._id === userId);
-          const userEmail = user.email;
+        //   const userEmail = user.email;
 
           // Log or use the user info as needed
-          console.log("User ID:", userId);
-          console.log("User Email:", userEmail);
+        //   console.log("User ID:", userId);
+        //   console.log("User Email:", userEmail);
 
         } catch (error) {
           console.error("Invalid token or token has expired", error);
@@ -227,6 +340,7 @@ const handleLowStockProducts = (refProductData) => {
 
 //   let ProductsWithLeastStock = getTop10LowStockProducts();
 //   console.log(ProductsWithLeastStock)
+console.log([countryCount])
 
   return (
     <div className="flex flex-col p-6 space-y-6">
@@ -287,6 +401,12 @@ const handleLowStockProducts = (refProductData) => {
         >
           Top Products Sold
         </button>
+        <button
+          className="bg-rose-500 text-white py-2 px-4 rounded"
+          onClick={() => setSelectedChart('OrderStatus')}
+        >
+          Order Status
+        </button>
       </div>
 
       {/* Chart Section */}
@@ -294,7 +414,7 @@ const handleLowStockProducts = (refProductData) => {
         {selectedChart === 'orders' && (
             <>
             <h3 className="text-xl font-semibold text-gray-800">Sales By Date</h3>
-            <div style={{ width: '100%', height: '400px' }}>
+            <div style={{ width: '100%', height: '500px', margin: "0 auto" }}>
             <Bar data={ordersGraphData} options={graphOptions} />
           </div>
             </>
@@ -303,7 +423,7 @@ const handleLowStockProducts = (refProductData) => {
         {selectedChart === 'revenue' && (
             <>
             <h3 className="text-xl font-semibold text-gray-800">Revenue Over Time</h3>
-            <div style={{ width: '100%', height: '400px' }}>
+            <div style={{ width: '100%', height: '500px', margin: "0 auto" }}>
             <Bar data={revenueGraphData} options={graphOptions} />
           </div>
             </>
@@ -312,13 +432,67 @@ const handleLowStockProducts = (refProductData) => {
         {selectedChart === 'topProducts' && (
             <>
             <h3 className="text-xl font-semibold text-gray-800">Top Products Sold</h3>
-            <div style={{ width: '100%', height: '400px' }}>
+            <div style={{ width: '100%', height: '500px', margin: "0 auto" }}>
             <Bar data={topProductsGraphData} options={graphOptions} />
           </div>
             </>
 
         )}
+        {selectedChart === 'OrderStatus' && (
+            <>
+            <h3 className="text-xl font-semibold text-gray-800">Order Status Distribution</h3>
+            <div style={{ width: "100%", maxWidth: "500px", margin: "0 auto" }}>
+              {Object.keys(statusData).length > 0 ? (
+                <Doughnut data={pieChartData} options={pieOptions} />
+              ) : (
+                <p className="text-center text-gray-500">No data available to display.</p>
+              )}
+            </div>
+            </>
+        )}
       </div>
+
+
+      <div className="container mx-auto px-4 py-8">
+  <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">Dashboard</h1>
+  <div className="overflow-x-auto bg-white shadow-md rounded-lg max-w-6xl mx-auto">
+    <table className="min-w-full table-auto border-collapse">
+      <thead className="bg-indigo-600 text-white">
+        <tr>
+          <th className="px-6 py-4 text-left font-semibold text-sm">Country & Flag</th>
+          <th className="px-6 py-4 text-left font-semibold text-sm">User Count</th>
+        </tr>
+      </thead>
+      <tbody className="bg-gray-50">
+        {Object.keys(countryFlagData).map((country, index) => (
+          <tr
+            key={country}
+            className={`border-b hover:bg-indigo-100 transition-colors duration-300 ${
+              index % 2 === 0 ? 'bg-white' : 'bg-gray-100'
+            }`}
+          >
+            <td className="px-6 py-4 flex items-center space-x-2 text-gray-700">
+              <img
+                src={countryFlagData[country].flag}
+                alt={country}
+                className="w-8 h-6 rounded-lg border"
+              />
+              <span>{country}</span>
+            </td>
+            <td className="px-6 py-4 text-gray-700 font-medium">{countryFlagData[country].count}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+
+
+
 
       <div className="p-6 bg-gradient-to-r from-blue-50 to-teal-50 shadow-xl rounded-xl">
   <h2 className="text-3xl font-extrabold text-gray-800 mb-6">Top 10 Products with Lowest Stock</h2>

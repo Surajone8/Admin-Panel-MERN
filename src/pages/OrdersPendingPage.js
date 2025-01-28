@@ -54,6 +54,7 @@ const OrdersPendingPage = () => {
       }
       const result = await response.json();
       setOrders(result.orders);
+      console.log(orders)
       setTotalOrders(result.totalOrders); // Set totalOrders to update pagination
     } catch (err) {
       setError(err.message);
@@ -66,6 +67,7 @@ const OrdersPendingPage = () => {
   useEffect(() => {
     fetchOrders(currentPage, "Pending");
   }, [currentPage]);
+//   console.log(orders)
 
   const filterOrders = (orders) => {
     return orders.filter((order) => {
@@ -562,7 +564,7 @@ const updateOrder = async (orderId, updatedData) => {
               </div> */}
               <div className="mb-4">
                   <label htmlFor="userId" className="block text-sm font-medium text-gray-700">
-                    User ID
+                    User ID (By name)
                   </label>
                   <select
                     id="userId"
